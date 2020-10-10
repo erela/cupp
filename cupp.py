@@ -79,19 +79,6 @@ def print_to_file(filename, unique_list_finished):
         + str(lines)
         + " words.\033[1;m"
     )
-    inspect = input("> Hyperspeed Print? (Y/n) : ").lower()
-    if inspect == "y":
-        try:
-            with open(filename, "r+") as wlist:
-                data = wlist.readlines()
-                for line in data:
-                    print("\033[1;32m[" + filename + "] \033[1;33m" + line)
-                    time.sleep(0000.1)
-                    os.system("clear")
-        except Exception as e:
-            print("[ERROR]: " + str(e))
-    else:
-        pass
 
     print(
         "[+] Now load your pistolero with \033[1;31m"
