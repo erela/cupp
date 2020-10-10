@@ -48,10 +48,88 @@ __version__ = "3.3.0"
 
 CONFIG = {}
 
+# ======== Helper functions ===========
+# For concatenations...
+def concats(seq, start, stop):
+    for mystr in seq:
+        for num in range(start, stop):
+            yield mystr + str(num)
 
+# For sorting and making combinations...
+def komb(seq, start, special=""):
+    for mystr in seq:
+        for mystr1 in start:
+            yield mystr + special + mystr1
+
+# Print list to file counting words
+def print_to_file(filename, unique_list_finished):
+    f = open(filename, "w")
+    unique_list_finished.sort()
+    f.write(os.linesep.join(unique_list_finished))
+    f.close()
+    f = open(filename, "r")
+    lines = 0
+    for line in f:
+        lines += 1
+    f.close()
+    print(
+        "[+] Saving dictionary to \033[1;31m"
+        + filename
+        + "\033[1;m, counting \033[1;31m"
+        + str(lines)
+        + " words.\033[1;m"
+    )
+    inspect = input("> Hyperspeed Print? (Y/n) : ").lower()
+    if inspect == "y":
+        try:
+            with open(filename, "r+") as wlist:
+                data = wlist.readlines()
+                for line in data:
+                    print("\033[1;32m[" + filename + "] \033[1;33m" + line)
+                    time.sleep(0000.1)
+                    os.system("clear")
+        except Exception as e:
+            print("[ERROR]: " + str(e))
+    else:
+        pass
+
+    print(
+        "[+] Now load your pistolero with \033[1;31m"
+        + filename
+        + "\033[1;m and shoot! Good luck!"
+    )
+
+def download_http(url, targetfile):
+    print("[+] Downloading " + targetfile + " from " + url + " ... ")
+    webFile = urllib.request.urlopen(url)
+    localFile = open(targetfile, "wb")
+    localFile.write(webFile.read())
+    webFile.close()
+    localFile.close()
+
+def print_cow():
+    print(" ___________ ")
+    print(" \033[07m  cupp.py! \033[27m                # \033[07mC\033[27mommon")
+    print("      \                     # \033[07mU\033[27mser")
+    print("       \   \033[1;31m,__,\033[1;m             # \033[07mP\033[27masswords")
+    print(
+        "        \  \033[1;31m(\033[1;moo\033[1;31m)____\033[1;m         # \033[07mP\033[27mrofiler"
+    )
+    print("           \033[1;31m(__)    )\ \033[1;m  ")
+    print(
+        "           \033[1;31m   ||--|| \033[1;m\033[05m*\033[25m\033[1;m      [ Muris Kurgas | j0rgan@remote-exploit.org ]"
+    )
+    print(28 * " " + "[ Mebus | https://github.com/Mebus/]\r\n")
+
+# Display version
+def version():
+    print("\r\n	\033[1;31m[ cupp.py ]  " + __version__ + "\033[1;m\r\n")
+    print("	* Hacked up by j0rgan - j0rgan@remote-exploit.org")
+    print("	* http://www.remote-exploit.org\r\n")
+    print("	Take a look ./README.md file for more info about the program\r\n")
+
+# Read the given configuration file and update global variables to reflect changes (CONFIG).
 def read_config(filename):
-    """Read the given configuration file and update global variables to reflect
-    changes (CONFIG)."""
 
     if os.path.isfile(filename):
 
@@ -92,96 +170,70 @@ def read_config(filename):
 
         return False
 
-
+# Convert string to leet
 def make_leet(x):
-    """convert string to leet"""
     for letter, leetletter in CONFIG["LEET"].items():
         x = x.replace(letter, leetletter)
     return x
 
+# create the directory if it doesn't exist
+def mkdir_if_not_exists(dire):
+    if not os.path.isdir(dire):
+        os.mkdir(dire)
 
-# for concatenations...
-def concats(seq, start, stop):
-    for mystr in seq:
-        for num in range(start, stop):
-            yield mystr + str(num)
-
-
-# for sorting and making combinations...
-def komb(seq, start, special=""):
-    for mystr in seq:
-        for mystr1 in start:
-            yield mystr + special + mystr1
-
-
-# print list to file counting words
-
-
-def print_to_file(filename, unique_list_finished):
-    f = open(filename, "w")
-    unique_list_finished.sort()
-    f.write(os.linesep.join(unique_list_finished))
-    f.close()
-    f = open(filename, "r")
-    lines = 0
-    for line in f:
-        lines += 1
-    f.close()
-    print(
-        "[+] Saving dictionary to \033[1;31m"
-        + filename
-        + "\033[1;m, counting \033[1;31m"
-        + str(lines)
-        + " words.\033[1;m"
+# Parse args
+def get_parser():
+    parser = argparse.ArgumentParser(description="Common User Passwords Profiler")
+    group = parser.add_mutually_exclusive_group(required=False)
+    group.add_argument(
+        "-i",
+        "--interactive",
+        action="store_true",
+        help="Interactive questions for user password profiling",
     )
-    inspect = input("> Hyperspeed Print? (Y/n) : ").lower()
-    if inspect == "y":
-        try:
-            with open(filename, "r+") as wlist:
-                data = wlist.readlines()
-                for line in data:
-                    print("\033[1;32m[" + filename + "] \033[1;33m" + line)
-                    time.sleep(0000.1)
-                    os.system("clear")
-        except Exception as e:
-            print("[ERROR]: " + str(e))
-    else:
-        pass
-
-    print(
-        "[+] Now load your pistolero with \033[1;31m"
-        + filename
-        + "\033[1;m and shoot! Good luck!"
+    group.add_argument(
+        "-w",
+        dest="improve",
+        metavar="FILENAME",
+        help="Use this option to improve existing dictionary,"
+        " or WyD.pl output to make some pwnsauce",
+    )
+    group.add_argument(
+        "-l",
+        dest="download_wordlist",
+        action="store_true",
+        help="Download huge wordlists from repository",
+    )
+    group.add_argument(
+        "-a",
+        dest="alecto",
+        action="store_true",
+        help="Parse default usernames and passwords directly"
+        " from Alecto DB. Project Alecto uses purified"
+        " databases of Phenoelit and CIRT which were merged"
+        " and enhanced",
+    )
+    group.add_argument(
+        "-v", "--version", action="store_true", help="Show the version of this program."
+    )
+    parser.add_argument(
+        "-q", "--quiet", action="store_true", help="Quiet mode (don't print banner)"
     )
 
+    return parser
 
-def print_cow():
-    print(" ___________ ")
-    print(" \033[07m  cupp.py! \033[27m                # \033[07mC\033[27mommon")
-    print("      \                     # \033[07mU\033[27mser")
-    print("       \   \033[1;31m,__,\033[1;m             # \033[07mP\033[27masswords")
-    print(
-        "        \  \033[1;31m(\033[1;moo\033[1;31m)____\033[1;m         # \033[07mP\033[27mrofiler"
-    )
-    print("           \033[1;31m(__)    )\ \033[1;m  ")
-    print(
-        "           \033[1;31m   ||--|| \033[1;m\033[05m*\033[25m\033[1;m      [ Muris Kurgas | j0rgan@remote-exploit.org ]"
-    )
-    print(28 * " " + "[ Mebus | https://github.com/Mebus/]\r\n")
+# Print given profile values
+def print_profile(profile):
+
+	for currKey in profile.keys():
+		print (f"{currKey} - {profile[currKey]}")
 
 
-def version():
-    """Display version"""
+# ========== F U N C T I O N S ===========
 
-    print("\r\n	\033[1;31m[ cupp.py ]  " + __version__ + "\033[1;m\r\n")
-    print("	* Hacked up by j0rgan - j0rgan@remote-exploit.org")
-    print("	* http://www.remote-exploit.org\r\n")
-    print("	Take a look ./README.md file for more info about the program\r\n")
-
-
-def improve_dictionary(file_to_open):
-    """Implementation of the -w option. Improve a dictionary by
+"""Implementation of the -w option. Improve a dictionary by
     interactively questioning the user."""
+def improve_dictionary(file_to_open):
 
     kombinacija = {}
     komb_unique = {}
@@ -301,9 +353,9 @@ def improve_dictionary(file_to_open):
     fajl.close()
 
 
-def interactive():
-    """Implementation of the -i switch. Interactively question the user and
+"""Implementation of the -i switch. Interactively question the user and
     create a password dictionary file based on the answer."""
+def interactive():
 
     print("\r\n[+] Insert the information about the victim to make a dictionary")
     print("[+] If you don't know all the info, just hit enter when asked! ;)\r\n")
@@ -370,11 +422,14 @@ def interactive():
     ).lower()
     profile["leetmode"] = input("> Leet mode? (i.e. leet = 1337) Y/[N]: ").lower()
 
+    isToPrint = input("> Print the profile? [Y]/N:").lower()
+    if isToPrint in ["y"," ",""]:
+    	print_profile(profile)
+
     generate_wordlist_from_profile(profile)  # generate the wordlist
 
-
+""" Generates a wordlist from a given profile """
 def generate_wordlist_from_profile(profile):
-    """ Generates a wordlist from a given profile """
 
     chars = CONFIG["global"]["chars"]
     years = CONFIG["global"]["years"]
@@ -707,19 +762,9 @@ def generate_wordlist_from_profile(profile):
 
     print_to_file(profile["name"] + ".txt", unique_list_finished)
 
-
-def download_http(url, targetfile):
-    print("[+] Downloading " + targetfile + " from " + url + " ... ")
-    webFile = urllib.request.urlopen(url)
-    localFile = open(targetfile, "wb")
-    localFile.write(webFile.read())
-    webFile.close()
-    localFile.close()
-
-
-def alectodb_download():
-    """Download csv from alectodb and save into local file as a list of
+"""Download csv from alectodb and save into local file as a list of
     usernames and passwords"""
+def alectodb_download():
 
     url = CONFIG["global"]["alectourl"]
 
@@ -757,9 +802,9 @@ def alectodb_download():
     f.close()
 
 
-def download_wordlist():
-    """Implementation of -l switch. Download wordlists from http repository as
+"""Implementation of -l switch. Download wordlists from http repository as
     defined in the configuration file."""
+def download_wordlist():
 
     print("	\r\n	Choose the section you want to download:\r\n")
 
@@ -800,8 +845,8 @@ def download_wordlist():
     return filedown
 
 
+""" do the HTTP download of a wordlist """
 def download_wordlist_http(filedown):
-    """ do the HTTP download of a wordlist """
 
     mkdir_if_not_exists("dictionaries")
 
@@ -1015,12 +1060,6 @@ def download_wordlist_http(filedown):
         print("[-] leaving.")
 
 
-# create the directory if it doesn't exist
-def mkdir_if_not_exists(dire):
-    if not os.path.isdir(dire):
-        os.mkdir(dire)
-
-
 # the main function
 def main():
     """Command-line interface to the cupp utility"""
@@ -1045,50 +1084,6 @@ def main():
         improve_dictionary(args.improve)
     else:
         parser.print_help()
-
-
-# Separate into a function for testing purposes
-def get_parser():
-    """Create and return a parser (argparse.ArgumentParser instance) for main()
-    to use"""
-    parser = argparse.ArgumentParser(description="Common User Passwords Profiler")
-    group = parser.add_mutually_exclusive_group(required=False)
-    group.add_argument(
-        "-i",
-        "--interactive",
-        action="store_true",
-        help="Interactive questions for user password profiling",
-    )
-    group.add_argument(
-        "-w",
-        dest="improve",
-        metavar="FILENAME",
-        help="Use this option to improve existing dictionary,"
-        " or WyD.pl output to make some pwnsauce",
-    )
-    group.add_argument(
-        "-l",
-        dest="download_wordlist",
-        action="store_true",
-        help="Download huge wordlists from repository",
-    )
-    group.add_argument(
-        "-a",
-        dest="alecto",
-        action="store_true",
-        help="Parse default usernames and passwords directly"
-        " from Alecto DB. Project Alecto uses purified"
-        " databases of Phenoelit and CIRT which were merged"
-        " and enhanced",
-    )
-    group.add_argument(
-        "-v", "--version", action="store_true", help="Show the version of this program."
-    )
-    parser.add_argument(
-        "-q", "--quiet", action="store_true", help="Quiet mode (don't print banner)"
-    )
-
-    return parser
 
 
 if __name__ == "__main__":
