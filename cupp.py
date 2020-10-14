@@ -537,11 +537,11 @@ def generate_wordlist_from_profile(profile):
 
 
     # Concat each 2 string from the basic dict
-    '''simple_concat = [];
+    simple_concat = [];
     for x in basic_words:
     	for y in basic_words:
     		if is_fits(str(x+y)):
-    			simple_concat.append(x+y)'''
+    			simple_concat.append(x+y)
 
 
     # Now me must do some string modifications...
