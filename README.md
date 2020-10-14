@@ -8,6 +8,9 @@
  
 ## About
 
+  Forked from CUPP project By Mebus - https://github.com/Mebus/cupp
+
+
   The most common form of authentication is the combination of a username
   and a password or passphrase. If both match values stored within a locally
   stored table, the user is authenticated for a connection. Password strength is
@@ -40,7 +43,7 @@ Quick start
 
         -h      this menu
 
-        -i      Interactive questions for user password profiling
+        -p      Read profile from profile.cfg file
 
         -w      Use this option to profile existing dictionary,
                 or WyD.pl output to make some pwnsauce :)
@@ -50,17 +53,11 @@ Quick start
         -a      Parse default usernames and passwords directly from Alecto DB.
                 Project Alecto uses purified databases of Phenoelit and CIRT which where merged and enhanced.
 
-        -v      Version of the program
-
 
 
 ## Configuration
 
    CUPP has configuration file cupp.cfg with instructions.
-
-## Example (Fast forwarded)
-
-![cupp-example](screenshots/cupp-example.gif)
 
 ## License
 
