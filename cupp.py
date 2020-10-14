@@ -46,7 +46,11 @@ __author__ = "Mebus"
 __license__ = "GPL"
 __version__ = "3.3.0"
 
+CONFIG_FILE = "cupp.cfg"
+PROFILE_FILE = "profile.cfg"
+
 CONFIG = {}
+G_PROFILE = {}
 
 # ======== Helper functions ===========
 # For concatenations...
@@ -136,6 +140,9 @@ def read_config(filename):
             "threshold": config.getint("nums", "threshold"),
             "alectourl": config.get("alecto", "alectourl"),
             "dicturl": config.get("downloader", "dicturl"),
+            "numbersPaddingLen": config.get("padding","numbersPaddingLen"),
+            "specialCharsPaddingLen": config.get("padding","specialCharsPaddingLen"),
+            "combineCharsAndNumbers": config.get("padding","combineCharsAndNumbers"),
         }
 
         # 1337 mode configs, well you can add more lines if you add it to the
@@ -149,13 +156,53 @@ def read_config(filename):
 
         CONFIG["LEET"] = leetc
 
+        #print_profile(CONFIG)
+
         return True
 
     else:
         print("Configuration file " + filename + " not found!")
-        sys.exit("Exiting.")
+        sys.exit("Exiting....")
 
         return False
+
+# Read profile from file
+def read_peofile(filename):
+
+	if os.path.isfile(filename):
+		profile_reader = configparser.ConfigParser()
+		profile_reader.read(filename)
+
+		G_PROFILE["essid"] = profile_reader.get("global","essid")
+		G_PROFILE["name"] = profile_reader.get("global","name")
+		G_PROFILE["middle_name"] = profile_reader.get("global","middle_name")
+		G_PROFILE["surname"] = profile_reader.get("global","surname")
+		G_PROFILE["nick"] = profile_reader.get("global","nick")
+		bday = profile_reader.get("global","birthdate")
+		if (len(bday) != 0 and len(bday) != 8) or not bday.isdigit():
+			print(f"[-] You must enter 8 digits for birthdate in DDMMYYYY format - Ignoring {bday}")
+			G_PROFILE["birthdate"] = ""
+		else:
+			G_PROFILE["birthdate"] = str(bday)
+
+		G_PROFILE["relatives_names"] = profile_reader.get("global","relatives_names").split(",")
+		G_PROFILE["dates"] = profile_reader.get("global","dates").split(",")
+		G_PROFILE["pets"] = profile_reader.get("global","pets").split(",")
+		G_PROFILE["words"] = profile_reader.get("global","words").split(",")
+
+        # Print loaded profile
+		print_profile(G_PROFILE)
+
+        
+		"""isToPrint = input("> Print the profile? [Y]/N:").lower()
+		if isToPrint in ["y"," ",""]:
+			print_profile(G_PROFILE)"""
+			
+		generate_wordlist_from_profile(G_PROFILE)
+
+	else:
+		print("Profile file " + filename + " not found!")
+		sys.exit("Exiting...")
 
 # Convert string to leet
 def make_leet(x):
@@ -173,10 +220,10 @@ def get_parser():
     parser = argparse.ArgumentParser(description="Common User Passwords Profiler")
     group = parser.add_mutually_exclusive_group(required=False)
     group.add_argument(
-        "-i",
-        "--interactive",
+        "-p",
+        "--profile",
         action="store_true",
-        help="Interactive questions for user password profiling",
+        help="Load profile from profile.cfg file.",
     )
     group.add_argument(
         "-w",
@@ -200,18 +247,19 @@ def get_parser():
         " databases of Phenoelit and CIRT which were merged"
         " and enhanced",
     )
-    group.add_argument(
-        "-v", "--version", action="store_true", help="Show the version of this program."
-    )
-    parser.add_argument(
-        "-q", "--quiet", action="store_true", help="Quiet mode (don't print banner)"
-    )
 
     return parser
+
+def is_fits(word):
+	if len(word) >= CONFIG["global"]["wcfrom"] and len(word) <= CONFIG["global"]["wcto"]:
+		return True
+	else:
+		return False
 
 # Print given profile values
 def print_profile(profile):
 
+	print("Loaded profile:")
 	for currKey in profile.keys():
 		print (f"{currKey} - {profile[currKey]}")
 
@@ -321,7 +369,7 @@ def improve_dictionary(file_to_open):
             x
         ) in (
             unique_lista
-        ):  # if you want to add more leet chars, you will need to add more lines in cupp.cfg too...
+        ):  # if you want to add more leet chars, you will need to add more lines in config file too...
             x = make_leet(x)  # convert to leet
             unique_leet.append(x)
 
@@ -341,7 +389,7 @@ def improve_dictionary(file_to_open):
 
 
 """Implementation of the -i switch. Interactively question the user and
-    create a password dictionary file based on the answer."""
+    create a password dictionary file based on the answer.
 def interactive():
 
     print("\r\n[+] Insert the information about the victim to make a dictionary")
@@ -414,6 +462,7 @@ def interactive():
     	print_profile(profile)
 
     generate_wordlist_from_profile(profile)  # generate the wordlist
+    """
 
 """ Generates a wordlist from a given profile """
 def generate_wordlist_from_profile(profile):
@@ -423,22 +472,82 @@ def generate_wordlist_from_profile(profile):
     numfrom = CONFIG["global"]["numfrom"]
     numto = CONFIG["global"]["numto"]
 
-    profile["spechars"] = []
+    """profile["spechars"] = []
 
-    if profile["spechars1"] == "y":
-        for spec1 in chars:
-            profile["spechars"].append(spec1)
-            for spec2 in chars:
-                profile["spechars"].append(spec1 + spec2)
-                for spec3 in chars:
-                    profile["spechars"].append(spec1 + spec2 + spec3)
-
+	if profile["spechars1"] == "y":
+		for spec1 in chars:
+			profile["spechars"].append(spec1)
+			for spec2 in chars:
+				profile["spechars"].append(spec1 + spec2)
+				for spec3 in chars:
+					profile["spechars"].append(spec1 + spec2 + spec3)"""
     print("\r\n[+] Now making a dictionary...")
+
+    basic_words = [];
+
+    essid,name,surname,nick,middle_name = profile["essid"],profile["name"],profile["surname"],profile["nick"],profile["middle_name"]
+    r_essid,r_name,r_surname,r_nick,r_middle = essid[::-1], name[::-1], surname[::-1],nick[::-1],middle_name[::-1]
+
+
+    basic_words.extend([essid, essid.title(), essid.upper(), essid.lower(),
+    	r_essid,r_essid.title(),r_essid.upper(),r_essid.lower(),
+    	name, name.title(),name.upper(), name.lower(),
+    	r_name, r_name.title(),r_name.upper(), r_name.lower(),
+    	surname, surname.title(), surname.upper(),surname.lower(),
+    	r_surname,r_surname.title(),r_surname.upper(),r_surname.lower()])
+
+    for name in profile["relatives_names"]:
+    	r_name = name[::-1].lower() # Reverse to lower
+    	basic_words.extend([name.lower(),name.upper(),name.title(),
+    		                r_name,r_name.upper(),r_name.title()])
+
+    for pet in profile["pets"]:
+    	r_pet = pet[::-1].lower() # Reverse to lower
+    	basic_words.extend([pet.lower(),pet.upper(),pet.title(),
+    		                r_pet,r_pet.upper(),r_pet.title()])
+
+    for word in profile["words"]:
+    	r_word = word[::-1].lower() # Reverse to lower
+    	basic_words.extend([word.lower(),word.upper(),word.title(),
+    		                r_word,r_word.upper(),r_word.title()])
+
+    
+    birthdate_yy = profile["birthdate"][-2:]
+    birthdate_yyyy = profile["birthdate"][-4:]
+    birthdate_xd = profile["birthdate"][1:2]
+    birthdate_xm = profile["birthdate"][3:4]
+    birthdate_dd = profile["birthdate"][:2]
+    birthdate_mm = profile["birthdate"][2:4]
+
+    basic_with_dates = [];
+    for word in basic_words:
+    	candidates = [word+birthdate_yy,
+    	              word+birthdate_yyyy,
+    	              word+birthdate_mm,
+    	              word+birthdate_dd,
+    	              word+birthdate_dd+birthdate_mm,
+    	              word+birthdate_mm+birthdate_dd,
+    	              word+birthdate_mm+birthdate_yy,
+    	              word+birthdate_yy+birthdate_mm,
+    	              ];
+    	
+    	for c in candidates:
+    		if is_fits(c):
+    			basic_with_dates.extend([c])
+
+
+    # Concat each 2 string from the basic dict
+    '''simple_concat = [];
+    for x in basic_words:
+    	for y in basic_words:
+    		if is_fits(str(x+y)):
+    			simple_concat.append(x+y)'''
+
 
     # Now me must do some string modifications...
 
     # Birthdays first
-
+    '''
     birthdate_yy = profile["birthdate"][-2:]
     birthdate_yyy = profile["birthdate"][-3:]
     birthdate_yyyy = profile["birthdate"][-4:]
@@ -462,19 +571,9 @@ def generate_wordlist_from_profile(profile):
     kidb_xm = profile["kidb"][3:4]
     kidb_dd = profile["kidb"][:2]
     kidb_mm = profile["kidb"][2:4]
-
-    # Convert first letters to uppercase...
-
-    nameup = profile["name"].title()
-    surnameup = profile["surname"].title()
-    nickup = profile["nick"].title()
-    wifeup = profile["wife"].title()
-    wifenup = profile["wifen"].title()
-    kidup = profile["kid"].title()
-    kidnup = profile["kidn"].title()
-    petup = profile["pet"].title()
-    companyup = profile["company"].title()
-
+'''
+    				
+    """
     wordsup = []
     wordsup = list(map(str.title, profile["words"]))
 
@@ -504,6 +603,11 @@ def generate_wordlist_from_profile(profile):
     rev_n = [rev_name, rev_nameup, rev_nick, rev_nickup]
     rev_w = [rev_wife, rev_wifeup]
     rev_k = [rev_kid, rev_kidup]
+
+    paddingLen = CONFIG["global"]["numbersPaddingLen"].int()
+    if paddingLen > 0:
+    	for i in range(paddingLen):
+
     # Let's do some serious work! This will be a mess of code, but... who cares? :)
 
     # Birthdays combinations
@@ -733,7 +837,7 @@ def generate_wordlist_from_profile(profile):
             x
         ) in (
             unique_lista
-        ):  # if you want to add more leet chars, you will need to add more lines in cupp.cfg too...
+        ):  # if you want to add more leet chars, you will need to add more lines in config file too...
 
             x = make_leet(x)  # convert to leet
             unique_leet.append(x)
@@ -747,7 +851,13 @@ def generate_wordlist_from_profile(profile):
         if len(x) < CONFIG["global"]["wcto"] and len(x) > CONFIG["global"]["wcfrom"]
     ]
 
-    print_to_file(profile["name"] + ".txt", unique_list_finished)
+    print_to_file(profile["name"] + ".txt", unique_list_finished)"""
+
+    uniqueListFinished = [];
+    uniqueListFinished.extend(basic_words)
+    uniqueListFinished.extend(simple_concat)
+    uniqueListFinished.extend(basic_with_dates)
+    print_to_file(profile["name"] + ".txt", uniqueListFinished)
 
 """Download csv from alectodb and save into local file as a list of
     usernames and passwords"""
@@ -1051,18 +1161,15 @@ def download_wordlist_http(filedown):
 def main():
     """Command-line interface to the cupp utility"""
 
-    read_config(os.path.join(os.path.dirname(os.path.realpath(__file__)), "cupp.cfg"))
+    read_config(os.path.join(os.path.dirname(os.path.realpath(__file__)), CONFIG_FILE))
 
     parser = get_parser()
     args = parser.parse_args()
 
-    if not args.quiet:
-        print_cow()
-
-    if args.version:
-        version()
-    elif args.interactive:
-        interactive()
+    
+    if args.profile:
+        #interactive()
+        read_peofile(PROFILE_FILE)
     elif args.download_wordlist:
         download_wordlist()
     elif args.alecto:
