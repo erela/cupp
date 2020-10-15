@@ -10,6 +10,11 @@
 
   Forked from CUPP project By Mebus - https://github.com/Mebus/cupp
 
+  This project customize the logic to be more specific for WiFi 
+  passwords.
+
+  -------------------------------------------------------------------
+
 
   The most common form of authentication is the combination of a username
   and a password or passphrase. If both match values stored within a locally
