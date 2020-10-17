@@ -488,7 +488,7 @@ def generate_wordlist_from_profile():
     	for ch in chars:
     		lstWithChars.extend([str(c_word + ch)])
 
-    print("[+] Sorting list and removing duplicates...")
+    print("[+] Sorting list and removing duplicates.")
 
     # Remove duplicates and return
     return remove_duplicates_from_list(lstWithChars)
