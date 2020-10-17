@@ -140,9 +140,9 @@ def read_config(filename):
             "threshold": config.getint("nums", "threshold"),
             "alectourl": config.get("alecto", "alectourl"),
             "dicturl": config.get("downloader", "dicturl"),
-            "numbersPaddingLen": config.get("padding","numbersPaddingLen"),
-            "specialCharsPaddingLen": config.get("padding","specialCharsPaddingLen"),
-            "combineCharsAndNumbers": config.get("padding","combineCharsAndNumbers"),
+            "numbers_padding_max_len": config.get("padding","numbers_padding_max_len"),
+            "special_chars_padding_len": config.get("padding","special_chars_padding_len"),
+            "combine_chars_and_numbers": config.get("padding","combine_chars_and_numbers"),
         }
 
         # 1337 mode configs, well you can add more lines if you add it to the
@@ -179,8 +179,8 @@ def read_peofile(filename):
 		G_PROFILE["surname"] = profile_reader.get("global","surname")
 		G_PROFILE["nick"] = profile_reader.get("global","nick")
 		bday = profile_reader.get("global","birthdate")
-		if (len(bday) != 0 and len(bday) != 8) or not bday.isdigit():
-			print(f"[-] You must enter 8 digits for birthdate in DDMMYYYY format - Ignoring {bday}")
+		if (len(bday) != 0 and len(bday) != 8) or not (bday.isdigit()):
+			print (f"You must enter 8 digits for birthdate in DDMMYYYY format - Ignoring {str(bday)}")
 			G_PROFILE["birthdate"] = ""
 		else:
 			G_PROFILE["birthdate"] = str(bday)
@@ -198,7 +198,7 @@ def read_peofile(filename):
 		if isToPrint in ["y"," ",""]:
 			print_profile(G_PROFILE)"""
 			
-		generate_wordlist_from_profile(G_PROFILE)
+		#generate_wordlist_from_profile(G_PROFILE)
 
 	else:
 		print("Profile file " + filename + " not found!")
@@ -262,6 +262,10 @@ def print_profile(profile):
 	print("Loaded profile:")
 	for currKey in profile.keys():
 		print (f"{currKey} - {profile[currKey]}")
+
+# Remove duplicate items from list
+def remove_duplicates_from_list(lst):
+    return list(dict.fromkeys(lst))
 
 
 # ========== F U N C T I O N S ===========
@@ -388,104 +392,18 @@ def improve_dictionary(file_to_open):
     fajl.close()
 
 
-"""Implementation of the -i switch. Interactively question the user and
-    create a password dictionary file based on the answer.
-def interactive():
-
-    print("\r\n[+] Insert the information about the victim to make a dictionary")
-    print("[+] If you don't know all the info, just hit enter when asked! ;)\r\n")
-
-    # We need some information first!
-
-    profile = {}
-
-    name = input("> First Name: ").lower()
-    while len(name) == 0 or name == " " or name == "  " or name == "   ":
-        print("\r\n[-] You must enter a name at least!")
-        name = input("> Name: ").lower()
-    profile["name"] = str(name)
-
-    profile["surname"] = input("> Surname: ").lower()
-    profile["nick"] = input("> Nickname: ").lower()
-    birthdate = input("> Birthdate (DDMMYYYY): ")
-    while len(birthdate) != 0 and len(birthdate) != 8:
-        print("\r\n[-] You must enter 8 digits for birthday!")
-        birthdate = input("> Birthdate (DDMMYYYY): ")
-    profile["birthdate"] = str(birthdate)
-
-    print("\r\n")
-
-    profile["wife"] = input("> Partners) name: ").lower()
-    profile["wifen"] = input("> Partners) nickname: ").lower()
-    wifeb = input("> Partners) birthdate (DDMMYYYY): ")
-    while len(wifeb) != 0 and len(wifeb) != 8:
-        print("\r\n[-] You must enter 8 digits for birthday!")
-        wifeb = input("> Partners birthdate (DDMMYYYY): ")
-    profile["wifeb"] = str(wifeb)
-    print("\r\n")
-
-    profile["kid"] = input("> Child's name: ").lower()
-    profile["kidn"] = input("> Child's nickname: ").lower()
-    kidb = input("> Child's birthdate (DDMMYYYY): ")
-    while len(kidb) != 0 and len(kidb) != 8:
-        print("\r\n[-] You must enter 8 digits for birthday!")
-        kidb = input("> Child's birthdate (DDMMYYYY): ")
-    profile["kidb"] = str(kidb)
-    print("\r\n")
-
-    profile["pet"] = input("> Pet's name: ").lower()
-    profile["company"] = input("> Company name: ").lower()
-    print("\r\n")
-
-    profile["words"] = [""]
-    words1 = input(
-        "> Do you want to add some key words about the victim? Y/[N]: "
-    ).lower()
-    words2 = ""
-    if words1 == "y":
-        words2 = input(
-            "> Please enter the words, separated by comma. [i.e. hacker,juice,black], spaces will be removed: "
-        ).replace(" ", "")
-    profile["words"] = words2.split(",")
-
-    profile["spechars1"] = input(
-        "> Do you want to add special chars at the end of words? Y/[N]: "
-    ).lower()
-
-    profile["randnum"] = input(
-        "> Do you want to add some random numbers at the end of words? Y/[N]:"
-    ).lower()
-    profile["leetmode"] = input("> Leet mode? (i.e. leet = 1337) Y/[N]: ").lower()
-
-    isToPrint = input("> Print the profile? [Y]/N:").lower()
-    if isToPrint in ["y"," ",""]:
-    	print_profile(profile)
-
-    generate_wordlist_from_profile(profile)  # generate the wordlist
-    """
-
 """ Generates a wordlist from a given profile """
-def generate_wordlist_from_profile(profile):
+def generate_wordlist_from_profile():
 
     chars = CONFIG["global"]["chars"]
     years = CONFIG["global"]["years"]
-    numfrom = CONFIG["global"]["numfrom"]
-    numto = CONFIG["global"]["numto"]
 
-    """profile["spechars"] = []
-
-	if profile["spechars1"] == "y":
-		for spec1 in chars:
-			profile["spechars"].append(spec1)
-			for spec2 in chars:
-				profile["spechars"].append(spec1 + spec2)
-				for spec3 in chars:
-					profile["spechars"].append(spec1 + spec2 + spec3)"""
     print("\r\n[+] Now making a dictionary...")
 
-    basic_words = [];
+    uniqueListFinished = []; # The finale list
+    basic_words = []; # Include all words from profile(basic info+relatives+pets+words) as is + reversed, + UPPER + lower + title
 
-    essid,name,surname,nick,middle_name = profile["essid"],profile["name"],profile["surname"],profile["nick"],profile["middle_name"]
+    essid,name,surname,nick,middle_name = G_PROFILE["essid"],G_PROFILE["name"],G_PROFILE["surname"],G_PROFILE["nick"],G_PROFILE["middle_name"]
     r_essid,r_name,r_surname,r_nick,r_middle = essid[::-1], name[::-1], surname[::-1],nick[::-1],middle_name[::-1]
 
 
@@ -496,44 +414,62 @@ def generate_wordlist_from_profile(profile):
     	surname, surname.title(), surname.upper(),surname.lower(),
     	r_surname,r_surname.title(),r_surname.upper(),r_surname.lower()])
 
-    for name in profile["relatives_names"]:
-    	r_name = name[::-1].lower() # Reverse to lower
-    	basic_words.extend([name.lower(),name.upper(),name.title(),
-    		                r_name,r_name.upper(),r_name.title()])
+    for category in ["relatives_names","pets","words"]:
+    	for name in G_PROFILE[category]:
+    	    r_name = name[::-1].lower() # Reverse and lower
+    	    basic_words.extend([name.lower(),name.upper(),name.title(),
+    		                    r_name,r_name.upper(),r_name.title()]) 
 
-    for pet in profile["pets"]:
-    	r_pet = pet[::-1].lower() # Reverse to lower
-    	basic_words.extend([pet.lower(),pet.upper(),pet.title(),
-    		                r_pet,r_pet.upper(),r_pet.title()])
+    # Add basci words to final list
+    uniqueListFinished.extend(basic_words)
+    
 
-    for word in profile["words"]:
-    	r_word = word[::-1].lower() # Reverse to lower
-    	basic_words.extend([word.lower(),word.upper(),word.title(),
-    		                r_word,r_word.upper(),r_word.title()])
+    # **************** Play with dates ****************
+
+    # Concat all dates from profile
+    all_dates =[];
+    all_dates.extend([G_PROFILE["birthdate"]])
+    all_dates.extend(G_PROFILE["dates"])
+    # print (all_dates) # DEBUG
 
     
-    birthdate_yy = profile["birthdate"][-2:]
-    birthdate_yyyy = profile["birthdate"][-4:]
-    birthdate_xd = profile["birthdate"][1:2]
-    birthdate_xm = profile["birthdate"][3:4]
-    birthdate_dd = profile["birthdate"][:2]
-    birthdate_mm = profile["birthdate"][2:4]
-
+    # Make combinations between basic words and dates
     basic_with_dates = [];
-    for word in basic_words:
-    	candidates = [word+birthdate_yy,
-    	              word+birthdate_yyyy,
-    	              word+birthdate_mm,
-    	              word+birthdate_dd,
-    	              word+birthdate_dd+birthdate_mm,
-    	              word+birthdate_mm+birthdate_dd,
-    	              word+birthdate_mm+birthdate_yy,
-    	              word+birthdate_yy+birthdate_mm,
-    	              ];
+    for curr_date in all_dates:
+
+        date_yy = curr_date[-2:]
+        date_yyyy = curr_date[-4:]
+        date_xd = curr_date[1:2]
+        date_xm = curr_date[3:4]
+        date_dd = curr_date[:2]
+        date_mm = curr_date[2:4]
+
+        for word in basic_words:
+    	    candidates = [word+curr_date,        # word + date
+    	                  word+date_yy,          # word + yy
+    	                  word+date_yyyy,        # word + yyyy
+    	                  word+date_mm,          # word + mm
+    	                  word+date_dd,          # word + dd
+    	                  word+date_dd+date_mm,  # word + dd + mm
+    	                  word+date_mm+date_dd,  # word + mm + dd
+    	                  word+date_mm+date_yy,  # word + mm + yy
+    	                  word+date_mm+date_yyyy,# word + mm + yyyy
+    	                  word+date_yy+date_mm,  # word + yy + mm
+    	                  word+date_yyyy+date_mm,# word + yyyy + mm
+    	                  ];
     	
-    	for c in candidates:
-    		if is_fits(c):
-    			basic_with_dates.extend([c])
+    	    for c in candidates:
+    		    if is_fits(c):
+    			    basic_with_dates.extend([c])
+
+    random_years = CONFIG["global"]["years"]
+    print (random_years)
+    for c_year in random_years:
+    	for c_word in basic_words:
+    		basic_with_dates.extend([c_word+c_year,c_year+c_word])
+
+    # Add dates result to final list
+    uniqueListFinished.extend(basic_with_dates)
 
 
     # Concat each 2 string from the basic dict
@@ -543,6 +479,9 @@ def generate_wordlist_from_profile(profile):
     		if is_fits(str(x+y)):
     			simple_concat.append(x+y)
 
+    uniqueListFinished.extend(simple_concat)
+
+    # Pad basic words with numbers
 
     # Now me must do some string modifications...
 
@@ -849,15 +788,12 @@ def generate_wordlist_from_profile(profile):
         x
         for x in unique_list
         if len(x) < CONFIG["global"]["wcto"] and len(x) > CONFIG["global"]["wcfrom"]
-    ]
+    ]"""
 
-    print_to_file(profile["name"] + ".txt", unique_list_finished)"""
+    print("[+] Sorting list and removing duplicates...")
 
-    uniqueListFinished = [];
-    uniqueListFinished.extend(basic_words)
-    uniqueListFinished.extend(simple_concat)
-    uniqueListFinished.extend(basic_with_dates)
-    print_to_file(profile["name"] + ".txt", uniqueListFinished)
+    # Remove duplicates and return
+    return remove_duplicates_from_list(uniqueListFinished)
 
 """Download csv from alectodb and save into local file as a list of
     usernames and passwords"""
@@ -1168,8 +1104,9 @@ def main():
 
     
     if args.profile:
-        #interactive()
         read_peofile(PROFILE_FILE)
+        lst = generate_wordlist_from_profile()
+        print_to_file(G_PROFILE["name"] + ".txt", lst)
     elif args.download_wordlist:
         download_wordlist()
     elif args.alecto:
