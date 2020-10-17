@@ -463,7 +463,7 @@ def generate_wordlist_from_profile():
     			    basic_with_dates.extend([c])
 
     random_years = CONFIG["global"]["years"]
-    print (random_years)
+    
     for c_year in random_years:
     	for c_word in basic_words:
     		basic_with_dates.extend([c_word+c_year,c_year+c_word])
@@ -480,6 +480,18 @@ def generate_wordlist_from_profile():
     			simple_concat.append(x+y)
 
     uniqueListFinished.extend(simple_concat)
+
+    # +++++ TBD  - add config check and multiple chars padding +++++
+    lstWithChars = [];
+    chars = CONFIG["global"]["chars"]
+    for c_word in uniqueListFinished:
+    	for ch in chars:
+    		lstWithChars.extend([str(c_word + ch)])
+
+    print("[+] Sorting list and removing duplicates...")
+
+    # Remove duplicates and return
+    return remove_duplicates_from_list(lstWithChars)
 
     # Pad basic words with numbers
 
@@ -790,10 +802,6 @@ def generate_wordlist_from_profile():
         if len(x) < CONFIG["global"]["wcto"] and len(x) > CONFIG["global"]["wcfrom"]
     ]"""
 
-    print("[+] Sorting list and removing duplicates...")
-
-    # Remove duplicates and return
-    return remove_duplicates_from_list(uniqueListFinished)
 
 """Download csv from alectodb and save into local file as a list of
     usernames and passwords"""
