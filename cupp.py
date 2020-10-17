@@ -140,9 +140,9 @@ def read_config(filename):
             "threshold": config.getint("nums", "threshold"),
             "alectourl": config.get("alecto", "alectourl"),
             "dicturl": config.get("downloader", "dicturl"),
-            "numbers_padding_max_len": config.get("padding","numbers_padding_max_len"),
-            "special_chars_padding_len": config.get("padding","special_chars_padding_len"),
-            "combine_chars_and_numbers": config.get("padding","combine_chars_and_numbers"),
+            "numbers_pading_max_len": config.get("pading","numbers_pading_max_len"),
+            "special_chars_pading": config.get("pading","special_chars_pading"),
+            "combine_chars_and_numbers": config.get("pading","combine_chars_and_numbers"),
         }
 
         # 1337 mode configs, well you can add more lines if you add it to the
@@ -267,6 +267,12 @@ def print_profile(profile):
 def remove_duplicates_from_list(lst):
     return list(dict.fromkeys(lst))
 
+def remove_short_long(lst):
+    new_lst = [];
+    for l in lst:
+        if is_fits(l):
+            new_lst.extend([l])
+    return new_lst
 
 # ========== F U N C T I O N S ===========
 
@@ -401,25 +407,56 @@ def generate_wordlist_from_profile():
     print("\r\n[+] Now making a dictionary...")
 
     uniqueListFinished = []; # The finale list
+    basic_short = []; # Include all word from profile with UPPER, lower, title
     basic_words = []; # Include all words from profile(basic info+relatives+pets+words) as is + reversed, + UPPER + lower + title
 
     essid,name,surname,nick,middle_name = G_PROFILE["essid"],G_PROFILE["name"],G_PROFILE["surname"],G_PROFILE["nick"],G_PROFILE["middle_name"]
     r_essid,r_name,r_surname,r_nick,r_middle = essid[::-1], name[::-1], surname[::-1],nick[::-1],middle_name[::-1]
 
 
-    basic_words.extend([essid, essid.title(), essid.upper(), essid.lower(),
+    basic_short.extend([essid, essid.title(), essid.upper(), essid.lower(),
     	r_essid,r_essid.title(),r_essid.upper(),r_essid.lower(),
     	name, name.title(),name.upper(), name.lower(),
     	r_name, r_name.title(),r_name.upper(), r_name.lower(),
     	surname, surname.title(), surname.upper(),surname.lower(),
     	r_surname,r_surname.title(),r_surname.upper(),r_surname.lower()])
 
+    basic_words.extend(basic_short)
+    
+    '''
+    min_pass_len = CONFIG["global"]["wcfrom"]
+    # Padding all short words
+    for word in basic_short:
+    	z = word
+    	for i in range(min_pass_len - len(word)):
+    		for j in range(9)
+    			z = z + str(j)
+    			basic_words.extend([z])
+    			print (z+str(j))'''
+
+
     for category in ["relatives_names","pets","words"]:
     	for name in G_PROFILE[category]:
     	    r_name = name[::-1].lower() # Reverse and lower
     	    basic_words.extend([name.lower(),name.upper(),name.title(),
     		                    r_name,r_name.upper(),r_name.title()]) 
+    
+    # Concat relative names to surname
+    for rel_name in G_PROFILE["relatives_names"]:
+    	basic_words.extend([str(surname + rel_name).title(),
+    		                str(surname + rel_name).upper(),
+    		                surname + rel_name,
+    		                surname.title()+rel_name.title()])
 
+    	basic_words.extend([rel_name + surname,
+    		                str(rel_name + surname).title(),
+    		                str(rel_name + surname).upper(),
+    		                rel_name.title() + surname.title()])
+
+    '''
+    print("\n===================== DEBUG - Basic words ===================")
+    print(basic_words)
+    print("=============================================================\n")'''
     # Add basci words to final list
     uniqueListFinished.extend(basic_words)
     
@@ -462,11 +499,11 @@ def generate_wordlist_from_profile():
     		    if is_fits(c):
     			    basic_with_dates.extend([c])
 
+    # Add random years (configuration) to basic words
     random_years = CONFIG["global"]["years"]
-    
     for c_year in random_years:
     	for c_word in basic_words:
-    		basic_with_dates.extend([c_word+c_year,c_year+c_word])
+    		basic_with_dates.extend([c_word+c_year,c_year+c_word,c_word+c_year[-2:],c_year[-2:]+c_word])
 
     # Add dates result to final list
     uniqueListFinished.extend(basic_with_dates)
@@ -479,19 +516,28 @@ def generate_wordlist_from_profile():
     		if is_fits(str(x+y)):
     			simple_concat.append(x+y)
 
+    '''
+    for c_year in random_years:
+    	for c_word in simple_concat:
+    		simple_concat.extend([c_word+c_year, c_year+c_word])'''
+
     uniqueListFinished.extend(simple_concat)
 
     # +++++ TBD  - add config check and multiple chars padding +++++
     lstWithChars = [];
-    chars = CONFIG["global"]["chars"]
-    for c_word in uniqueListFinished:
-    	for ch in chars:
-    		lstWithChars.extend([str(c_word + ch)])
+
+    if CONFIG["global"]["special_chars_pading"] == "yes":
+        chars = CONFIG["global"]["chars"]
+        for c_word in uniqueListFinished:
+    	    for ch in chars:
+    		    lstWithChars.extend([c_word,str(c_word + ch)])
+    else:
+    	lstWithChars = uniqueListFinished
 
     print("[+] Sorting list and removing duplicates.")
 
-    # Remove duplicates and return
-    return remove_duplicates_from_list(lstWithChars)
+    # Remove duplicate and return
+    return remove_short_long(remove_duplicates_from_list(lstWithChars))
 
     # Pad basic words with numbers
 
