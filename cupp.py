@@ -117,7 +117,7 @@ def version():
     print("\r\n	\033[1;31m[ cupp.py ]  " + __version__ + "\033[1;m\r\n")
     print("	* Hacked up by j0rgan - j0rgan@remote-exploit.org")
     print("	* http://www.remote-exploit.org\r\n")
-    print("	Take a look ./README.md file for more info about the program\r\n")
+    print("	Take a look at ./README.md file for more info about the program\r\n")
 
 # Read the given configuration file and update global variables to reflect changes (CONFIG).
 def read_config(filename):
@@ -167,7 +167,7 @@ def read_config(filename):
         return False
 
 # Read profile from file
-def read_peofile(filename):
+def read_profile(filename):
 
 	if os.path.isfile(filename):
 		profile_reader = configparser.ConfigParser()
@@ -911,7 +911,7 @@ def main():
 
     
     if args.profile:
-        read_peofile(PROFILE_FILE)
+        read_profile(PROFILE_FILE)
         lst = generate_wordlist_from_profile()
         print_to_file(G_PROFILE["name"] + ".txt", lst)
     elif args.download_wordlist:
